@@ -21,6 +21,7 @@ from google.genai import types
 
 from prompts import system_prompt
 from call_function import available_functions, call_function
+from config import MAX_ITERS
 
 
 def main():
@@ -39,7 +40,16 @@ def main():
     messages = [
         types.Content(role="user", parts=[types.Part(text=user_prompt)]),
     ]
-    generate_content(client, messages, verbose_flag)
+    for _ in range(MAX_ITERS):
+        try:
+            final_response = generate_content(client, messages, verbose_flag)
+            if final_response:
+                print("Final response:")
+                print(final_response)
+                break
+        except Exception as e:
+            print(f"Error in generate_content: {e}")
+        
 
 
 def generate_content(client, messages, verbose_flag):
@@ -50,6 +60,9 @@ def generate_content(client, messages, verbose_flag):
             tools=[available_functions], system_instruction=system_prompt
         ),
     )
+
+    for message in response.candidates:
+        messages.append(message.content)
     
     if verbose_flag:
         user_prompt = messages[0].parts[0].text
