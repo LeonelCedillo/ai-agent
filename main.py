@@ -20,7 +20,7 @@ from google import genai
 from google.genai import types
 
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import available_functions, call_function
 
 
 def main():
@@ -60,6 +60,11 @@ def generate_content(client, messages, verbose_flag):
     if response.function_calls:
         for function_call_part in response.function_calls:
             print(f"Calling function: {function_call_part.name}({function_call_part.args})")
+            function_call_result = call_function(function_call_part, verbose_flag)
+            if not hasattr(function_call_result.parts[0], "function_response"):
+                raise Exception("empty function call result")
+            if verbose_flag:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
     else:
         return response.text
 
